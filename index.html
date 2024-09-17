@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Speed Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f4f8;
+        }
+
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        #text-display {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+            color: #666;
+        }
+
+        #input-field {
+            width: 100%;
+            padding: 0.5rem;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+
+        #stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+
+        .stat-box {
+            background-color: #e9ecef;
+            padding: 0.5rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        #start-btn {
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            font-size: 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        #start-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Typing Speed Test</h1>
+        <p id="text-display"></p>
+        <input type="text" id="input-field" disabled>
+        <div id="stats">
+            <div class="stat-box">Time: <span id="time">60</span>s</div>
+            <div class="stat-box">WPM: <span id="wpm">0</span></div>
+            <div class="stat-box">Accuracy: <span id="accuracy">0</span>%</div>
+        </div>
+        <button id="start-btn">Start Test</button>
+    </div>
+
+    <script>
+        const textDisplay = document.getElementById('text-display');
+        const inputField = document.getElementById('input-field');
+        const timeSpan = document.getElementById('time');
+        const wpmSpan = document.getElementById('wpm');
+        const accuracySpan = document.getElementById('accuracy');
+        const startBtn = document.getElementById('start-btn');
+
+        let timer;
+        let timeLeft = 60;
+        let isTestActive = false;
+        let startTime;
+        let correctCharacters = 0;
+
+        const texts = [
+            "The quick brown fox jumps over the lazy dog.",
+            "She sells seashells by the seashore.",
+            "How much wood would a woodchuck chuck if a woodchuck could chuck wood?",
+            "Peter Piper picked a peck of pickled peppers.",
+            "I scream, you scream, we all scream for ice cream.",
+            "In the beginning, there was light, and the universe came into existence with the birth of stars and galaxies.",
+            "A journey of a thousand miles begins with a single step, yet sometimes it is the second step that is the hardest.",
+            "The rain fell in sheets, soaking the earth and creating a symphony of sound as it struck the windows and roofs.",
+            "Mountains stood tall, their peaks reaching the heavens, covered in snow, untouched by human hands.",
+            "With every sunrise, the world is reborn, bringing new hopes, dreams, and opportunities to those willing to seize them.",
+            "Technology has advanced beyond our wildest imaginations, connecting people across the globe in ways once thought impossible.",
+            "A ship in harbor is safe, but that is not what ships are built for.",
+            "Through the mist of time, ancient civilizations rise and fall, leaving behind stories etched in stone and whispers carried by the wind.",
+            "Creativity is the act of turning new and imaginative ideas into reality, a process that transcends ordinary thinking.",
+            "In the vastness of space, our planet is but a small speck, yet it is filled with a boundless variety of life, each form unique and essential.",
+            "The universe is not only stranger than we imagine, it is stranger than we can imagine.",
+            "There is nothing permanent except change, for even the mighty mountains are worn down by the winds and waters over time.",
+            "In a world where you can be anything, be kind, for kindness costs nothing but brings immeasurable rewards.",
+            "The vast ocean waves crashed against the rocky shoreline, sending up a fine mist that shimmered in the pale light of dawn.",
+            "As the seasons change, so too do we, growing and evolving, shaped by our experiences and the people we meet.",
+            "The stars were aligned in perfect harmony, a cosmic dance that had been ongoing for eons, unseen by most yet constant and true.",
+            "Success is not final, failure is not fatal: It is the courage to continue that counts.",
+            "The forest was alive with the sound of birds chirping, leaves rustling, and the soft whisper of the wind as it moved through the trees.",
+            "The journey of self-discovery is one filled with twists and turns, but every step brings us closer to understanding our true selves.",
+            "The quiet hum of the city at night is both comforting and unsettling, as the world never truly sleeps.",
+            "To live is the rarest thing in the world. Most people exist, that is all.",
+            "The human brain, with its countless neurons and synapses, is the most complex structure in the known universe, capable of astonishing feats of cognition.",
+            "A dream you dream alone is only a dream. A dream you dream together is reality.",
+            "The storm raged for hours, but when it passed, the world was left washed clean and renewed, a fresh start for all who witnessed it.",
+            "In every walk with nature, one receives far more than he seeks.",
+            "The desert stretched on for miles, an endless sea of sand dunes under the burning sun, with no signs of life for as far as the eye could see.",
+            "You miss 100% of the shots you don’t take.",
+            "The mind is everything. What you think, you become.",
+            "There are no secrets to success. It is the result of preparation, hard work, and learning from failure.",
+            "The only limit to our realization of tomorrow is our doubts of today.",
+            "Innovation distinguishes between a leader and a follower.",
+            "Our greatest glory is not in never falling, but in rising every time we fall.",
+            "Do not wait to strike till the iron is hot, but make it hot by striking.",
+            "There is only one way to avoid criticism: do nothing, say nothing, and be nothing.",
+            "Every moment is a fresh beginning, a new chance to start over and embrace the possibilities of the future.",
+            "Success usually comes to those who are too busy to be looking for it.",
+            "In the middle of every difficulty lies opportunity.",
+            "The two most important days in your life are the day you are born and the day you find out why.",
+            "The best time to plant a tree was twenty years ago. The second best time is now.",
+            "It is not the years in your life but the life in your years that counts.",
+            "Act as if what you do makes a difference. It does."
+        ];
+
+
+        function startTest() {
+            isTestActive = true;
+            timeLeft = 60;
+            correctCharacters = 0;
+            inputField.disabled = false;
+            inputField.value = '';
+            inputField.focus();
+            startBtn.disabled = true;
+
+            const randomText = texts[Math.floor(Math.random() * texts.length)];
+            textDisplay.innerHTML = randomText.split('').map(char => `<span>${char}</span>`).join('');
+
+            startTime = new Date().getTime();
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timeSpan.textContent = timeLeft;
+                updateStats();
+                if (timeLeft === 0) endTest();
+            }, 1000);
+        }
+
+        function endTest() {
+            isTestActive = false;
+            clearInterval(timer);
+            inputField.disabled = true;
+            startBtn.disabled = false;
+            startBtn.textContent = 'Restart Test';
+            updateStats();
+        }
+
+        function updateStats() {
+            const currentTime = new Date().getTime();
+            const timeElapsed = (currentTime - startTime) / 60000; // in minutes
+            const wordsTyped = inputField.value.trim().split(/\s+/).length;
+            const wpm = Math.round(wordsTyped / timeElapsed);
+            const accuracy = Math.round((correctCharacters / inputField.value.length) * 100) || 0;
+
+            wpmSpan.textContent = wpm;
+            accuracySpan.textContent = accuracy;
+        }
+
+        inputField.addEventListener('input', () => {
+            if (!isTestActive) return;
+
+            const inputChars = inputField.value.split('');
+            const textChars = textDisplay.querySelectorAll('span');
+
+            correctCharacters = 0;
+
+            textChars.forEach((charSpan, index) => {
+                if (!inputChars[index]) {
+                    charSpan.classList.remove('correct', 'incorrect');
+                } else if (charSpan.innerText === inputChars[index]) {
+                    charSpan.classList.add('correct');
+                    charSpan.classList.remove('incorrect');
+                    correctCharacters++;
+                } else {
+                    charSpan.classList.add('incorrect');
+                    charSpan.classList.remove('correct');
+                }
+            });
+
+            updateStats();
+
+            if (inputField.value.length === textChars.length) {
+                endTest();
+            }
+        });
+
+        startBtn.addEventListener('click', startTest);
+    </script>
+</body>
+
+</html>
